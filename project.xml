@@ -36,6 +36,6 @@
 	<haxelib name="openfl" />
 	
 	<assets path="data" exclude="*.svg|*.mp3|*.ogg|*.wav" />
-	<icon path="data/icon/openfl.svg" />
+	<icon path="data/icon/power.svg" />
 	
 </project>

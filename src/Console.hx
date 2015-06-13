@@ -56,7 +56,7 @@ class Console {
 	
 	public static function showlog():Void {
 		if (showtest) {
-			logposition = consolelog.length - 20;
+			logposition = consolelog.length - 15;
 			for (k in 0 ... consolelog.length) {
 				Text.display(2, Std.int(2 + ((k-logposition) * (Text.height() + 2))), consolelog[k], logcol[k]);
 			}

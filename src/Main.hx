@@ -10,29 +10,49 @@ import sys.FileSystem;
 #end
 
 class Main {
-  var cmdprocess:Process;
-  var currentcmd:String;
-  var thread:Thread;
-  var processrunning:Bool;
-  var compileclicked:Bool;
-
-  var targetlist:Array<String>;
-  var currenttarget:Int;
-  
-  var requirerestart:Bool;
-
-  var rootdir:String;
+	public static var testmode:Bool = false; // Show GUI controls even if we're not in a TerryLib dir.
 	
-  function new() {
-    Gfx.resizescreen(800, 400);
+  public static var cmdprocess:Process;
+  public static var currentcmd:String;
+  public static var thread:Thread;
+  public static var processrunning:Bool;
+  public static var compileclicked:Bool;
+	public static var version:String;
+
+  public static var targetlist:Array<String>;
+  public static var currenttarget:Int;
+  
+  public static var buildlist:Array<String>;
+  public static var buildcommand:Array<String>;
+  public static var currentbuild:Int;
+	
+  public static var requirerestart:Bool;
+
+  public static var rootdir:String;
+	
+  public function new() {
+    Gfx.resizescreen(800, 300);
     Text.changesize(16);
-
+		
+		version = "v1.0";
+    buildlist = ["normal", "final"];
+		buildcommand = ["test", "build"];
     targetlist = ["flash", "html5", "neko"];
+    #if mac
+		targetlist.push("mac");
+		#elseif windows
+		targetlist.push("windows");
+		#elseif linux
+		targetlist.push("linux");
+		#end
     currenttarget = 0;
-
+		currentbuild = 0;
+		
     processrunning = false;
     compileclicked = false;
     
+		Gui.init();
+		
     #if mac
       rootdir = Sys.getCwd();
       rootdir = Stringedit.getlastroot(rootdir, "/");
@@ -43,12 +63,20 @@ class Main {
       Sys.setCwd(rootdir);
     #end
     
-    Console.log("TerryCompile v0.1");
-    Console.log(" ");
-    if(FileSystem.exists("project.xml")){
+    Console.log("TerryCompile " + version);
+    if(FileSystem.exists("project.xml") || testmode){
+      Console.log("Click the COMPILE button in the top right to compile!");
+      Console.log(" ");
       Console.log("[Ready]");
-      requirerestart=false;
+      requirerestart = false;
+			
+			Gui.addbutton(695, 6, 100, "COMPILE", "compile");
+			Gui.adddroplist(570, 4, 100, "target");
+			Gui.adddropdown(655, 6);
+			//Gui.adddroplist(455, 4, 100, "build");
+			//Gui.adddropdown(540, 6);
     }else{
+      Console.log(" ");
       Console.log("HOW TO USE THIS UTILITY:");
       #if mac
         Console.log("Copy this app into the project folder that you want to compile, and restart.");
@@ -60,48 +88,31 @@ class Main {
     }
   }
 	
-  function update() {
+  public static function update() {
     if(!requirerestart){
-      /*
-      if (Mouse.rightclick()) {
-        if (!processrunning) {
-          compileclicked = true;
-          Console.log("Compiling...");
-          runcommand("ls");
-        }
-      }
-      */
-      
-      if (Mouse.leftclick()) {
-        if (Mouse.x > 700 && Mouse.y < 20) {
-          if (!processrunning) {
-            compileclicked = true;
-            Console.log("Compiling...");
-            runcommand("openfl");
-          }
-        }
-      }
+      Gui.checkinput();
     }
-
+		
     if (Input.justpressed(Key.Q)) {
       endthread();
     }
-
-    if(processrunning) readoutput();
-
+		
+    if (processrunning) readoutput();
+		
     Gfx.cls(Col.NIGHTBLUE);
-
+		
     Console.showlog();
-
-    if(!compileclicked && !requirerestart){
-      Gfx.fillbox(702, 2, 100, 20, Col.BLACK);
-      Gfx.fillbox(700, 0, 100, 20, Col.DARKBLUE);
-
-      Text.display(750, 0, "COMPILE", Col.WHITE, { centeralign: true } );
-    }	
+		if (!requirerestart) {
+			Gfx.fillbox(0, 0, Gfx.screenwidth, 30, 0xFF3B4652);
+			
+			Text.display(4, 4, "TerryCompile " + version, 0xDDDDDD);
+			Text.display(500, 4, "TARGET:", 0xDDDDDD);
+			
+			Gui.drawbuttons();
+		}
   }
 	
-  function readoutput():Void {
+  public static function readoutput():Void {
     var tempstring:String = ""; 
 
     try {
@@ -120,14 +131,14 @@ class Main {
     if (tempstring != "") Console.log(tempstring, Col.GRAY);
   }
 
-  function runcommand(cmd:String):Void {
+  public static function runcommand(cmd:String):Void {
     endthread();
 
     currentcmd = cmd;
     thread = Thread.create(newthread);
   }
 	
-  function newthread():Void {
+  public static function newthread():Void {
     if(currentcmd=="openfl"){
       cmdprocess = new Process(currentcmd, ["test", targetlist[currenttarget]]);
     }else{
@@ -136,7 +147,7 @@ class Main {
     processrunning = true;
   }
 	
-  function endthread():Void {
+  public static function endthread():Void {
     if (processrunning) {
       processrunning = false;
       cmdprocess.kill();

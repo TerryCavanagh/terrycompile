@@ -3,9 +3,7 @@ import haxe.io.Output;
 import sys.io.Process;
 import haxe.io.Eof;
 import sys.FileSystem;
-#if cpp
-  import cpp.vm.Thread;
-#elseif neko
+#if neko
   import neko.vm.Thread;
 #end
 
@@ -18,6 +16,8 @@ class Main {
   public static var processrunning:Bool;
   public static var compileclicked:Bool;
 	public static var version:String;
+  public static var counter:Int;
+	public static var readphase:String;
 
   public static var targetlist:Array<String>;
   public static var currenttarget:Int;
@@ -29,10 +29,12 @@ class Main {
   public static var requirerestart:Bool;
 
   public static var rootdir:String;
+	public static var pausetime:Float;
 	
   public function new() {
     Gfx.resizescreen(800, 300);
     Text.changesize(16);
+		counter = 0;
 		
 		version = "v1.0";
     buildlist = ["normal", "final"];
@@ -47,6 +49,7 @@ class Main {
 		#end
     currenttarget = 0;
 		currentbuild = 0;
+		readphase = "normal";
 		
     processrunning = false;
     compileclicked = false;
@@ -97,8 +100,6 @@ class Main {
       endthread();
     }
 		
-    if (processrunning) readoutput();
-		
     Gfx.cls(Col.NIGHTBLUE);
 		
     Console.showlog();
@@ -108,43 +109,83 @@ class Main {
 			Text.display(4, 4, "TerryCompile " + version, 0xDDDDDD);
 			Text.display(500, 4, "TARGET:", 0xDDDDDD);
 			
+			if (processrunning) {
+				if (Convert.toint(counter / 20) % 3 == 0) {
+					Text.display(Gfx.screenwidth - 30, Gfx.screenheight - 20, ".", Col.WHITE);
+				}else if (Convert.toint(counter / 20) % 3 == 1) {
+					Text.display(Gfx.screenwidth - 30, Gfx.screenheight - 20, "..", Col.WHITE);
+				}else {
+					Text.display(Gfx.screenwidth - 30, Gfx.screenheight - 20, "...", Col.WHITE);
+				}
+			}
+			
 			Gui.drawbuttons();
 		}
+		
+		counter++;
   }
 	
-  public static function readoutput():Void {
-    var tempstring:String = ""; 
-
-    try {
-      tempstring = cmdprocess.stderr.readLine().toString();
-    }catch (e:haxe.io.Eof) {
-      try {
-        tempstring = cmdprocess.stdout.readLine().toString();
-      }catch (e:haxe.io.Eof) {
-        Console.log(" ");
-        Console.log("[Ready]");
-        compileclicked = false;
-        processrunning = false;
-      }
-    }
-
-    if (tempstring != "") Console.log(tempstring, Col.GRAY);
-  }
-
   public static function runcommand(cmd:String):Void {
     endthread();
-
+		
+		readphase = "normal";
     currentcmd = cmd;
     thread = Thread.create(newthread);
   }
 	
   public static function newthread():Void {
-    if(currentcmd=="openfl"){
-      cmdprocess = new Process(currentcmd, ["test", targetlist[currenttarget]]);
+		if(currentcmd=="openfl"){
+      //cmdprocess = new Process(currentcmd, ["test", targetlist[currenttarget]]);
+			cmdprocess = new Process("ls", []);
     }else{
       cmdprocess = new Process(currentcmd, []);
     }
+		
     processrunning = true;
+		pausetime = 0.01;
+		var messagethisframe:Bool;
+		while (processrunning) {
+			messagethisframe = false;
+			Sys.sleep(pausetime);
+		  
+			var tempstring:String = ""; 
+			
+			if (readphase == "normal") {
+				try {
+				  tempstring = cmdprocess.stdout.readLine().toString();
+				}catch (e:haxe.io.Eof) {
+					readphase = "error";
+				}
+			}
+			
+			if (tempstring != "") {
+				messagethisframe = true;
+				Console.log(tempstring, Col.GRAY);
+				tempstring = "";
+			}
+			
+			if (readphase == "error") {
+				try {
+					tempstring = cmdprocess.stderr.readLine().toString();
+				}catch (e:haxe.io.Eof) {
+					Console.log(" ");
+					Console.log("[Ready]");
+					compileclicked = false;
+					processrunning = false;
+				}
+			}
+			
+			if (tempstring != "") {
+				messagethisframe = true;
+				Console.log(tempstring, Col.GRAY);
+			}
+			
+			if (messagethisframe) {
+				pausetime = 0.01;
+			}else {
+				pausetime = 0.5;
+			}
+		}
   }
 	
   public static function endthread():Void {

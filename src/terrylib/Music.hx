@@ -18,7 +18,7 @@ class Music {
 		numsongs = 0;
 	}
 	
-	public static function play(t:String):Void {
+	public static function play(t:String, time:Int = 0):Void {
 		if (currentsong !=t) {
 			if (currentsong != "nothing") {
 				//Stop the old song first
@@ -28,7 +28,7 @@ class Music {
 			if (t != "nothing") {
 				currentsong = t;
 				
-				musicchannel = musicchan[Std.int(songindex.get(t))].play(0);
+				musicchannel = musicchan[Std.int(songindex.get(t))].play((time * 1000) % musicchan[Std.int(songindex.get(t))].length);
 				musicchannel.soundTransform = new SoundTransform(songvolumelevels[Std.int(songindex.get(t))] * globalsound);
 				
 				musicchannel.addEventListener(Event.SOUND_COMPLETE, loopmusic);
@@ -131,7 +131,15 @@ class Music {
 		if (currentefchan > 15) currentefchan -= 16;
 	}
 	
-	public static function addsound(t:String, vol:Float = 1.0):Void {
+	public static function stopsound():Void {
+		temptransform = new SoundTransform(0);
+		
+		for (i in 0 ... 16) {
+			if (efchannel[i] != null) efchannel[i].soundTransform = temptransform;
+		}
+	}
+	
+	public static function loadsound(t:String, vol:Float = 1.0):Void {
 		effectindex.set(t, numeffects);
 		volumelevels.push(vol);
 		#if flash
@@ -142,7 +150,7 @@ class Music {
 		numeffects++;
 	}
 	
-	public static function addsong(t:String, vol:Float = 1.0):Void {	
+	public static function loadsong(t:String, vol:Float = 1.0):Void {	
 		songindex.set(t, numsongs);
 		songvolumelevels.push(vol);
 		#if flash
@@ -153,7 +161,7 @@ class Music {
 		numsongs++;
 	}
 	
-	public static var musicchan:Array<Dynamic> = new Array<Dynamic>();	
+	public static var musicchan:Array<Sound> = new Array<Sound>();	
 	public static var musicchannel:SoundChannel;
 	public static var currentsong:String;
 	public static var musicfade:Int;

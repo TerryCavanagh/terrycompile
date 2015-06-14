@@ -21,6 +21,8 @@ typedef Drawparams = {
 	@:optional var red:Float;
 	@:optional var green:Float;
 	@:optional var blue:Float;
+	@:optional var xalign:Int;
+	@:optional var yalign:Int;
 }
 
 class Gfx {
@@ -95,7 +97,6 @@ class Gfx {
 	/** Makes a tile array from a given image. */
 	public static function loadtiles(imagename:String, width:Int, height:Int):Void {
 		buffer = new Bitmap(Assets.getBitmapData("data/graphics/" + imagename + ".png")).bitmapData;
-		
 		var tiles_rect:Rectangle = new Rectangle(0, 0, width, height);
 		tiles.push(new Tileset(imagename, width, height));
 		tilesetindex.set(imagename, tiles.length - 1);
@@ -130,17 +131,18 @@ class Gfx {
 	
 	/** Returns the width of a tile in the current tileset. */
 	public static function tilewidth():Int {
-		return tiles[currenttileset].tiles[0].width;
+		return tiles[currenttileset].width;
 	}
 	
 	/** Returns the height of a tile in the current tileset. */
 	public static function tileheight():Int {
-		return return tiles[currenttileset].tiles[0].height;
+		return tiles[currenttileset].height;
 	}
 	
 	/** Loads an image into the game. */
 	public static function loadimage(imagename:String):Void {
 		buffer = new Bitmap(Assets.getBitmapData("data/graphics/" + imagename + ".png")).bitmapData;
+		
 		imageindex.set(imagename, images.length);
 		
 		var t:BitmapData = new BitmapData(buffer.width, buffer.height, true, 0x000000);
@@ -242,9 +244,34 @@ class Gfx {
 		alphact.redMultiplier = 1.0; alphact.greenMultiplier = 1.0;	alphact.blueMultiplier = 1.0;
 		alphact.alphaMultiplier = tempalpha;
 		changecolours = false;
+		tempxalign = x;	tempyalign = y;
 		
 		x = imagealignx(x); y = imagealigny(y);
-		if(parameters != null){
+		if (parameters != null) {
+			if (parameters.xalign != null) {
+				if (parameters.xalign == CENTER) {
+					if (tempxalign != CENTER) {
+						x = x - Std.int(images[imagenum].width / 2);
+					}
+				}else if (parameters.xalign == BOTTOM || parameters.xalign == RIGHT) {
+					if (tempxalign != RIGHT) {
+						x = x - Std.int(images[imagenum].width);
+					}
+				}
+			}
+			
+			if (parameters.yalign != null) {
+				if (parameters.yalign == CENTER) {
+					if (tempyalign != CENTER) {
+						y = y - Std.int(images[imagenum].height / 2);
+					}
+				}else if (parameters.yalign == BOTTOM || parameters.yalign == RIGHT) {
+					if (tempyalign != BOTTOM) {
+						y = y - Std.int(images[imagenum].height);
+					}
+				}
+			}
+			
 			if (parameters.xpivot != null) tempxpivot = imagealignonimagex(parameters.xpivot);
 			if (parameters.ypivot != null) tempypivot = imagealignonimagey(parameters.ypivot); 
 			if (parameters.scale != null) {
@@ -356,11 +383,37 @@ class Gfx {
 		alphact.redMultiplier = 1.0; alphact.greenMultiplier = 1.0;	alphact.blueMultiplier = 1.0;
 		alphact.alphaMultiplier = tempalpha;
 		changecolours = false;
+		tempxalign = x;	tempyalign = y;
 		
 		x = tilealignx(x); y = tilealigny(y);
 		if (parameters != null) {
+			if (parameters.xalign != null) {
+				if (parameters.xalign == CENTER) {
+					if (tempxalign != CENTER) {
+						x = x - Std.int(tilewidth() / 2);
+					}
+				}else if (parameters.xalign == BOTTOM || parameters.xalign == RIGHT) {
+					if (tempxalign != RIGHT) {
+						x = x - Std.int(tilewidth());
+					}
+				}
+			}
+			
+			if (parameters.yalign != null) {
+				if (parameters.yalign == CENTER) {
+					if (tempyalign != CENTER) {
+						y = y - Std.int(tileheight() / 2);
+					}
+				}else if (parameters.yalign == BOTTOM || parameters.yalign == RIGHT) {
+					if (tempyalign != BOTTOM) {
+						y = y - Std.int(tileheight());
+					}
+				}
+			}
+			
 			if (parameters.xpivot != null) tempxpivot = tilealignontilex(parameters.xpivot);
 			if (parameters.ypivot != null) tempypivot = tilealignontiley(parameters.ypivot); 
+			
 			if (parameters.scale != null) {
 				tempxscale = parameters.scale;
 				tempyscale = parameters.scale;
@@ -368,6 +421,7 @@ class Gfx {
 				if (parameters.xscale != null) tempxscale = parameters.xscale;
 				if (parameters.yscale != null) tempyscale = parameters.yscale;
 			}
+			
 			if (parameters.rotation != null) temprotate = parameters.rotation;
 			if (parameters.alpha != null) {
 				tempalpha = parameters.alpha;
@@ -395,7 +449,8 @@ class Gfx {
 		shapematrix.translate( -tempxpivot, -tempypivot);
 		if (temprotate != 0) shapematrix.rotate((temprotate * 3.1415) / 180);
 		if (tempxscale != 1.0 || tempyscale != 1.0) shapematrix.scale(tempxscale, tempyscale);
-		shapematrix.translate(x + tempxpivot, y + tempypivot);
+		shapematrix.translate(tempxpivot, tempypivot);
+		shapematrix.translate(x, y);
 		if (changecolours) {
 		  drawto.draw(tiles[currenttileset].tiles[t], shapematrix, alphact);
 		}else {
@@ -583,16 +638,23 @@ class Gfx {
 			y = y - height;
 		}
 		
-		tempshape.graphics.clear();
-		tempshape.graphics.lineStyle(linethickness, col, alpha);
-		tempshape.graphics.lineTo(width, 0);
-		tempshape.graphics.lineTo(width, height);
-		tempshape.graphics.lineTo(0, height);
-		tempshape.graphics.lineTo(0, 0);
-		
-		shapematrix.translate(x, y);
-		drawto.draw(tempshape, shapematrix);
-		shapematrix.translate( -x, -y);
+		if (linethickness < 2) {				
+			drawline(x, y, x + width, y, col, alpha);
+			drawline(x, y + height, x + width, y + height, col, alpha);
+			drawline(x, y + 1, x, y + height, col, alpha);
+			drawline(x + width - 1, y + 1, x + width - 1, y + height, col, alpha);
+		}else{
+			tempshape.graphics.clear();
+			tempshape.graphics.lineStyle(linethickness, col, alpha);
+			tempshape.graphics.lineTo(width, 0);
+			tempshape.graphics.lineTo(width, height);
+			tempshape.graphics.lineTo(0, height);
+			tempshape.graphics.lineTo(0, 0);
+			
+			shapematrix.translate(x, y);
+			drawto.draw(tempshape, shapematrix);
+			shapematrix.translate( -x, -y);
+		}
 	}
 
 	public static function setlinethickness(size:Float):Void {
@@ -752,6 +814,8 @@ class Gfx {
 	private static var tempgreen:Float;
 	private static var tempblue:Float;
 	private static var tempframe:Int;
+	private static var tempxalign:Float;
+	private static var tempyalign:Float;
 	private static var changecolours:Bool;
 	private static var oldtileset:String;
 	private static var tx:Float;

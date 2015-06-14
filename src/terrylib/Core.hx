@@ -25,7 +25,7 @@ class Core extends Sprite {
 		
 		//Default setup
 		Gfx.resizescreen(768, 480);
-		Text.addfont("inconsolata", 16);
+		Text.addfont("inconsolata", 24);
 		
 		Scene.init();
 		

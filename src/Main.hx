@@ -1,11 +1,8 @@
 import terrylib.*;
 import haxe.io.Output;
 import sys.io.Process;
-import haxe.io.Eof;
 import sys.FileSystem;
-#if neko
-  import neko.vm.Thread;
-#end
+import neko.vm.Thread;
 
 class Main {
 	public static var testmode:Bool = false; // Show GUI controls even if we're not in a TerryLib dir.
@@ -74,8 +71,7 @@ class Main {
       requirerestart = false;
 			
 			Gui.addbutton(695, 6, 100, "COMPILE", "compile");
-			Gui.adddroplist(570, 4, 100, "target");
-			Gui.adddropdown(655, 6);
+			createdropdownlist();
 			//Gui.adddroplist(455, 4, 100, "build");
 			//Gui.adddropdown(540, 6);
     }else{
@@ -96,10 +92,6 @@ class Main {
       Gui.checkinput();
     }
 		
-    if (Input.justpressed(Key.Q)) {
-      endthread();
-    }
-		
     Gfx.cls(Col.NIGHTBLUE);
 		
     Console.showlog();
@@ -107,16 +99,17 @@ class Main {
 			Gfx.fillbox(0, 0, Gfx.screenwidth, 30, 0xFF3B4652);
 			
 			Text.display(4, 4, "TerryCompile " + version, 0xDDDDDD);
-			Text.display(500, 4, "TARGET:", 0xDDDDDD);
 			
 			if (processrunning) {
 				if (Convert.toint(counter / 20) % 3 == 0) {
-					Text.display(Gfx.screenwidth - 30, Gfx.screenheight - 20, ".", Col.WHITE);
+					Text.display(490, 4, "Compiling to " + targetlist[currenttarget].toUpperCase() + " .", 0xDDDDDD);	
 				}else if (Convert.toint(counter / 20) % 3 == 1) {
-					Text.display(Gfx.screenwidth - 30, Gfx.screenheight - 20, "..", Col.WHITE);
+					Text.display(490, 4, "Compiling to " + targetlist[currenttarget].toUpperCase() + " ..", 0xDDDDDD);	
 				}else {
-					Text.display(Gfx.screenwidth - 30, Gfx.screenheight - 20, "...", Col.WHITE);
+					Text.display(490, 4, "Compiling to " + targetlist[currenttarget].toUpperCase() + " ...", 0xDDDDDD);	
 				}
+			}else {
+				Text.display(500, 4, "TARGET:", 0xDDDDDD);
 			}
 			
 			Gui.drawbuttons();
@@ -130,13 +123,13 @@ class Main {
 		
 		readphase = "normal";
     currentcmd = cmd;
-    thread = Thread.create(newthread);
+		
+		thread = Thread.create(newthread);
   }
 	
   public static function newthread():Void {
 		if(currentcmd=="openfl"){
-      //cmdprocess = new Process(currentcmd, ["test", targetlist[currenttarget]]);
-			cmdprocess = new Process("ls", []);
+      cmdprocess = new Process(currentcmd, ["test", targetlist[currenttarget]]);
     }else{
       cmdprocess = new Process(currentcmd, []);
     }
@@ -147,7 +140,6 @@ class Main {
 		while (processrunning) {
 			messagethisframe = false;
 			Sys.sleep(pausetime);
-		  
 			var tempstring:String = ""; 
 			
 			if (readphase == "normal") {
@@ -172,6 +164,7 @@ class Main {
 					Console.log("[Ready]");
 					compileclicked = false;
 					processrunning = false;
+					createdropdownlist();
 				}
 			}
 			
@@ -195,4 +188,12 @@ class Main {
       thread = null;
     }
   }
+	
+	public static function createdropdownlist():Void {
+		for (i in 0 ... Gui.numbuttons) {
+		  if (Gui.button[i].text == "CANCEL") Gui.button[i].text = "COMPILE";
+		}
+		Gui.adddroplist(570, 4, 100, "target");
+		Gui.adddropdown(655, 6);	
+	}
 }

@@ -143,10 +143,19 @@ class Gui {
 					}else{
 						timage = 2;
 					}
-					if (button[i].mouseover) {
-						Gfx.fillbox(button[i].position.x - timage, button[i].position.y - timage, button[i].position.width, button[i].position.height, 0xFF3177FF);
-					}else {
-						Gfx.fillbox(button[i].position.x - timage, button[i].position.y - timage, button[i].position.width, button[i].position.height, 0xFF3155F2);
+					
+					if (button[i].text == "CANCEL") {
+						if (button[i].mouseover) {
+							Gfx.fillbox(button[i].position.x - timage, button[i].position.y - timage, button[i].position.width, button[i].position.height, 0xFFFF7731);
+						}else {
+							Gfx.fillbox(button[i].position.x - timage, button[i].position.y - timage, button[i].position.width, button[i].position.height, 0xFFF25531);
+						}
+					}else{
+						if (button[i].mouseover) {
+							Gfx.fillbox(button[i].position.x - timage, button[i].position.y - timage, button[i].position.width, button[i].position.height, 0xFF3177FF);
+						}else {
+							Gfx.fillbox(button[i].position.x - timage, button[i].position.y - timage, button[i].position.width, button[i].position.height, 0xFF3155F2);
+						}
 					}
 					
 					tx = button[i].position.x - 2 + (button[i].position.width / 2) - (Text.len(button[i].text) / 2) + button[i].textoffset - timage;
@@ -298,10 +307,26 @@ class Gui {
 			if (!Main.processrunning) {
 				Main.compileclicked = true;
 				Console.log("[Compiling to " + Main.targetlist[Main.currenttarget].toUpperCase() + "...]");
-				Console.log("> openfl test " + Main.targetlist[Main.currenttarget]);
+				if (Main.currenttarget == 3) {
+					Console.log("> openfl test " + Main.targetlist[Main.currenttarget] + " [this may take some time]");
+				}else {
+					Console.log("> openfl test " + Main.targetlist[Main.currenttarget]);
+				}
 				Main.runcommand("openfl");
+				
+				button[i].press();
+				button[i].text = "CANCEL";
+				deleteall("build");
+				deleteall("droplist");
+				deleteall("buildtarget");
+				deleteall("downarrow");
+			}else {
+				Main.endthread();
+				Main.createdropdownlist();
+				button[i].press();
+				button[i].text = "COMPILE";
+				
 			}
-			button[i].press();
 		}else	if (currentbutton == "build") {
 			if (listopen) {
 				listopen = false;

@@ -98,7 +98,7 @@ class Gfx {
 	public static function loadtiles(imagename:String, width:Int, height:Int):Void {
 		buffer = new Bitmap(Assets.getBitmapData("data/graphics/" + imagename + ".png")).bitmapData;
 		var tiles_rect:Rectangle = new Rectangle(0, 0, width, height);
-		tiles.push(new Tileset(imagename, width, height));
+		tiles.push(new terrylib.util.Tileset(imagename, width, height));
 		tilesetindex.set(imagename, tiles.length - 1);
 		currenttileset = tiles.length - 1;
 		
@@ -119,7 +119,7 @@ class Gfx {
 	
 	/** Creates a blank tileset, with the name "imagename", with each tile a given width and height, containing "amount" tiles. */
 	public static function createtiles(imagename:String, width:Float, height:Float, amount:Int):Void {
-		tiles.push(new Tileset(imagename, Std.int(width), Std.int(height)));
+		tiles.push(new terrylib.util.Tileset(imagename, Std.int(width), Std.int(height)));
 		tilesetindex.set(imagename, tiles.length - 1);
 		currenttileset = tiles.length - 1;
 		
@@ -782,7 +782,7 @@ class Gfx {
 	public static var deviceyres:Int;
 	public static var fullscreen:Bool;
 	
-	private static var tiles:Array<Tileset> = new Array<Tileset>();
+	private static var tiles:Array<terrylib.util.Tileset> = new Array<terrylib.util.Tileset>();
 	private static var tilesetindex:Map<String, Int> = new Map<String, Int>();
 	private static var currenttileset:Int;
 	public static var currenttilesetname:String;

@@ -1,5 +1,3 @@
 # TerryCompile
 
-TerryCompile is a simple compiler tool for TerryLib games. To use it, just copy the App to the project folder you want to compile, run it, and click the compile button!
-
-TerryCompile is part of a beginner's programming tutorial that I'm currently writing. It's intended to give beginners a simple way to get programs up and running without having to install an IDE.
+TerryCompile is an abandoned compiler tool for Haxegon games that I was using early in development. It doesn't work for the latest versions of Haxegon. But maybe someday in the future, it will be seed for this project: https://github.com/TerryCavanagh/haxegon/issues/78
